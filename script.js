@@ -1,131 +1,109 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // state 對應你的積木變數 / 清單
-  const state = {
-    字串: '',
-    n1: '',
-    n: 1,
-    儲存碼_顯示: [],
-    儲存碼_匯出: []
-  };
-
-  // DOM
-  const getEl = id => document.getElementById(id);
   const el = {
-    input: getEl('inputText'),
-    output: getEl('output'),
-    saveList: getEl('saveList'),
-    exportList: getEl('exportList'),
-    runEncrypt: getEl('runEncrypt'),
-    runDecode: getEl('runDecode'),
-    runConvertTextToString: getEl('runConvertTextToString'),
-    runConvertStringToText: getEl('runConvertStringToText'),
-    clearBtn: getEl('clearBtn'),
-    showListBtn: getEl('showListBtn'),
-    hideListBtn: getEl('hideListBtn'),
-    addErrorBtn: getEl('addErrorBtn'),
-    saveCurrentBtn: getEl('saveCurrentBtn'),
-    toggleExportBtn: getEl('toggleExportBtn'),
-    saveCode2Input: getEl('saveCode2')
+    input: document.getElementById('inputText'),
+    output: document.getElementById('output'),
+    encryptBtn: document.getElementById('encryptBtn'),
+    decodeBtn: document.getElementById('decodeBtn'),
+    clearBtn: document.getElementById('clearBtn')
   };
 
-  // 工具
-  const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function renderLists(){
-    if(el.saveList) el.saveList.innerHTML = state.儲存碼_顯示.length ? state.儲存碼_顯示.map((v,i)=>`<li>${i+1}. ${escapeHtml(String(v))}</li>`).join('') : '<li class="muted">（空）</li>';
-    if(el.exportList) el.exportList.innerHTML = state.儲存碼_匯出.length ? state.儲存碼_匯出.map((v,i)=>`<li>${i+1}. ${escapeHtml(String(v))}</li>`).join('') : '<li class="muted">（空）</li>';
-  }
-  function addToList(name, val){
-    if(name === '儲存碼_顯示') state.儲存碼_顯示.push(val);
-    if(name === '儲存碼_匯出') state.儲存碼_匯出.push(val);
-    renderLists();
-  }
+  const PREFIX = 'SaveCode2';
 
-  // -----------------------------
-  // 積木對應函式（保持原順序與動作）
-  // -----------------------------
-
-  // 字串轉文字條件確認
-  function 字串轉文字條件確認(){
-    const ans = (el.input && el.input.value) ? el.input.value : '';
-    state.字串 = String(ans);
-    state.n1 = '';
-    state.n = 1;
-    for(let i=0;i<9;i++){
-      const s = state.字串;
-      const idx = state.n;
-      const ch = (idx >=1 && idx <= s.length) ? s.charAt(idx-1) : '';
-      // n1 設為 組合 n1 字串 第 n 字
-      state.n1 = state.n1 + s + ch;
-      state.n = state.n + 1;
+  // 工具：產生 1..n 的隨機排列（Fisher-Yates）
+  function randomPermutation(n){
+    const arr = Array.from({length:n}, (_,i) => i+1);
+    for(let i=n-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    if(el.output) el.output.textContent = state.n1;
+    return arr;
   }
 
-  // 轉換(字串轉文字)
-  function 轉換_字串轉文字(){
-    字串轉文字條件確認();
-    addToList('儲存碼_顯示', state.n1);
-  }
-
-  // 轉換(文字轉字串)
-  function 轉換_文字轉字串(){
-    const s = (el.input && el.input.value) ? el.input.value : '';
-    state.字串 = String(s);
-    state.n1 = '';
-    state.n = 1;
-    for(let i=0;i<9;i++){
-      const idx = state.n;
-      const ch = (idx >=1 && idx <= state.字串.length) ? state.字串.charAt(idx-1) : '';
-      state.n1 = state.n1 + '[' + state.字串 + ']' + ch;
-      state.n = state.n + 1;
+  // 加密：輸入 plaintext，回傳格式 SaveCode2 p1-p2-...-pn:cipher
+  function encryptText(plaintext){
+    plaintext = String(plaintext || '');
+    const n = plaintext.length;
+    if(n === 0) return { error: '請輸入要加密的文字' };
+    const perm = randomPermutation(n);        // perm 的長度為 n
+    // cipher[i] = plaintext[perm[i]-1]  (第 i 個 cipher 來自原文第 perm[i]-1)
+    const cipherChars = [];
+    for(let i=0;i<n;i++){
+      const sourceIndex = perm[i]-1;
+      cipherChars.push(plaintext.charAt(sourceIndex));
     }
-    if(el.output) el.output.textContent = state.n1;
-    addToList('儲存碼_匯出', state.n1);
+    const cipher = cipherChars.join('');
+    const header = PREFIX + perm.join('-') + ':'; // 例如 SaveCode22-1-3:
+    return { result: header + cipher };
   }
 
-  // 當收到 訊息 加密（按鈕）
-  function whenReceive_加密(){
-    // 對應你的積木：呼叫 轉換(文字轉字串)
-    轉換_文字轉字串();
+  // 解碼：輸入密文字串，回傳明文或錯誤
+  function decodeText(input){
+    input = String(input || '');
+    if(!input.startsWith(PREFIX)) return { error: '格式錯誤：缺少 SaveCode2 前綴，無法解碼' };
+    const rest = input.slice(PREFIX.length);
+    // rest 範例： "2-1-3:cipherText" 或 "2-1-3:cipherText"
+    const colonIndex = rest.indexOf(':');
+    if(colonIndex === -1) return { error: '格式錯誤：缺少 ":" 分隔排列與密文' };
+    const permPart = rest.slice(0, colonIndex).trim();
+    const cipher = rest.slice(colonIndex + 1);
+    if(!permPart) return { error: '格式錯誤：排列部分為空' };
+    const permTokens = permPart.split('-').filter(t => t.length>0);
+    const perm = permTokens.map(t => {
+      const v = parseInt(t, 10);
+      return Number.isFinite(v) ? v : NaN;
+    });
+    if(perm.some(isNaN)) return { error: '格式錯誤：排列含非數字項' };
+    // 長度檢查
+    if(perm.length !== cipher.length) return { error: '長度不符：排列長度與密文字數不一致' };
+
+    // 檢查 perm 是否為 1..n 的一個排列（沒重複、範圍正確）
+    const n = perm.length;
+    const seen = new Array(n+1).fill(false);
+    for(let i=0;i<n;i++){
+      const v = perm[i];
+      if(v < 1 || v > n) return { error: '排列值超出範圍' };
+      if(seen[v]) return { error: '排列含重複值，非合法排列' };
+      seen[v] = true;
+    }
+
+    // 還原：cipher 的第 i 字元放到 plaintext 的 perm[i]-1 位置
+    const out = new Array(n).fill('');
+    for(let i=0;i<n;i++){
+      const targetIndex = perm[i]-1;
+      out[targetIndex] = cipher.charAt(i);
+    }
+    return { result: out.join('') };
   }
 
-  // 當收到 訊息 解碼（按鈕）
-  function whenReceive_解碼(){
-    // 對應你的積木：顯示 儲存碼-顯示、隱藏 儲存碼-匯出、執行 字串轉文字條件確認
-    if(el.saveList) el.saveList.classList.remove('hidden');
-    if(el.exportList) el.exportList.classList.add('hidden');
-    字串轉文字條件確認();
-
-    // 之後有條件判斷：如果 n1 = SaveCode2 那麼 轉換(字串轉文字) 否則 添加(系統：錯誤) 到 儲存碼-顯示
-    const saveCode2 = (el.saveCode2Input && el.saveCode2Input.value) ? el.saveCode2Input.value : '';
-    if(state.n1 === saveCode2){
-      轉換_字串轉文字();
+  // 顯示結果或錯誤
+  function showResult(obj){
+    if(obj.error){
+      el.output.textContent = '錯誤：' + obj.error;
+      el.output.style.color = 'crimson';
     } else {
-      addToList('儲存碼_顯示', '系統：錯誤');
+      el.output.textContent = obj.result;
+      el.output.style.color = '#111';
     }
   }
 
-  // 添加系統錯誤（直接對應積木）
-  function 添加系統錯誤(){
-    addToList('儲存碼_顯示', '系統：錯誤');
-  }
+  // 綁定
+  el.encryptBtn.addEventListener('click', () => {
+    const inText = el.input.value || '';
+    const res = encryptText(inText);
+    showResult(res);
+  });
 
-  // -----------------------------
-  // 綁定（安全綁定，若元素缺失則略過）
-  // -----------------------------
-  function safe(id, ev, fn){ const e = el[id]; if(e) e.addEventListener(ev, fn); }
+  el.decodeBtn.addEventListener('click', () => {
+    const inText = el.input.value || '';
+    const res = decodeText(inText);
+    showResult(res);
+  });
 
-  safe('runEncrypt','click', whenReceive_加密);
-  safe('runDecode','click', whenReceive_解碼);
-  safe('runConvertTextToString','click', 轉換_文字轉字串);
-  safe('runConvertStringToText','click', 轉換_字串轉文字);
-  safe('clearBtn','click', ()=>{ if(el.input) el.input.value=''; if(el.output) el.output.textContent='已清除'; });
-  safe('showListBtn','click', ()=>{ if(el.saveList) el.saveList.classList.remove('hidden'); });
-  safe('hideListBtn','click', ()=>{ if(el.saveList) el.saveList.classList.add('hidden'); });
-  safe('addErrorBtn','click', 添加系統錯誤);
-  safe('saveCurrentBtn','click', ()=>{ const v = (el.output && el.output.textContent) || (el.input && el.input.value) || ''; if(v) addToList('儲存碼_匯出', v); });
-  safe('toggleExportBtn','click', ()=>{ if(el.exportList) el.exportList.classList.toggle('hidden'); });
+  el.clearBtn.addEventListener('click', () => {
+    el.input.value = '';
+    el.output.textContent = '已清除';
+    el.output.style.color = '#111';
+  });
 
-  renderLists();
-  console.log('積木直譯版 script 初始化完成', {hasInput: !!el.input, hasOutput: !!el.output});
+  console.log('SaveCode2 tool initialized');
 });
