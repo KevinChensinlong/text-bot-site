@@ -3,23 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Scratch 轉網頁 — 加密 / 解碼</title>
+  <title>Scratch 轉網頁 — 加密 / 解碼（精確對應積木）</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
-    <h1>加密 / 解碼</h1>
+    <h1>加密 / 解碼（積木直譯版）</h1>
 
-    <label>輸入（ask 相當）</label>
+    <label for="inputText">輸入（相當於 ask / 詢問的答案）</label>
     <textarea id="inputText" rows="6" placeholder="貼上或輸入文字"></textarea>
 
     <div class="buttons">
-      <button id="runEncrypt">執行 加密（when receive 加密）</button>
-      <button id="runDecode">執行 解碼（when receive 解碼）</button>
-      <button id="runConvertTextToString">文字轉字串（轉換(文字轉字串)）</button>
-      <button id="runConvertStringToText">字串轉文字（轉換(字串轉文字)）</button>
+      <button id="runEncrypt">執行 加密（當收到 訊息 加密）</button>
+      <button id="runDecode">執行 解碼（當收到 訊息 解碼）</button>
+      <button id="runConvertTextToString">轉換(文字轉字串)</button>
+      <button id="runConvertStringToText">轉換(字串轉文字)</button>
       <button id="clearBtn">清除輸入</button>
     </div>
+
+    <section>
+      <h2>參數</h2>
+      <label for="saveCode2">SaveCode2（比對用）</label>
+      <input id="saveCode2" placeholder="輸入 SaveCode2 的值" />
+    </section>
 
     <section>
       <h2>輸出</h2>
@@ -36,19 +42,24 @@
     </section>
 
     <section>
+      <h2>儲存碼-匯出（list）</h2>
+      <ul id="exportList" class="list hidden"></ul>
+    </section>
+
+    <section>
       <h2>功能控制（對應積木）</h2>
       <div class="controls small">
         <button id="addErrorBtn">添加(系統：錯誤) 到 儲存碼-顯示</button>
         <button id="saveCurrentBtn">儲存目前結果 到 儲存碼-匯出</button>
+        <button id="toggleExportBtn">顯示/隱藏 儲存碼-匯出</button>
       </div>
     </section>
 
     <footer class="notes">
-      本頁直接對應你傳來的積木：按鈕觸發對應事件，不做額外語意轉換。
+      本頁直接以你提供的積木順序與動作建立，不詮釋積木語意；若需微調某個積木細節（例如 SaveCode2 的來源），請告訴我要用哪一個積木值替換。
     </footer>
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
-
