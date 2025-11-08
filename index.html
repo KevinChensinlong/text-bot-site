@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>互動文字機器人</title>
+  <meta charset="utf-8">
+  <title>文字互動機器人</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>請輸入文字：</h1>
-  <input type="text" id="inputText">
-  <button onclick="processText()">送出</button>
-  <div id="output"></div>
-
-  <script>
-    function processText() {
-      const input = document.getElementById("inputText").value;
-      const words = input.trim().split(" ");
-      let output = "";
-
-      for (let word of words) {
-        if (word === "hello") {
-          output += "👋 Hi there!<br>";
-        } else if (word === "bye") {
-          output += "👋 Goodbye!<br>";
-        }
-      }
-
-      document.getElementById("output").innerHTML = output || "⚠️ 沒有偵測到關鍵字";
-    }
-  </script>
+  <main>
+    <h1>文字互動機器人</h1>
+    <div class="input-row">
+      <input id="textInput" placeholder="請輸入文字..." />
+      <button id="sendBtn">送出</button>
+    </div>
+    <div id="output"></div>
+    <div id="logArea"></div>
+  </main>
+  <script src="script.js"></script>
 </body>
 </html>
