@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     output: document.getElementById('output'),
     encryptBtn: document.getElementById('encryptBtn'),
     decodeBtn: document.getElementById('decodeBtn'),
-    clearBtn: document.getElementById('clearBtn')
+    clearBtn: document.getElementById('clearBtn'),
+    copyBtn: document.getElementById('copyBtn'),
+    copyFeedback: document.getElementById('copyFeedback')
   };
 
   function log(msg){ console.log('[SaveCode2]', msg); }
@@ -21,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return a;
   }
 
-  // 輸入安全化：去除常見零寬字元並 trim（保留內部符號與冒號）
+  // 輸入安全化：去除零寬字元與 CR/LF，但保留內部符號（輸入欄為 single-line）
   function normalizeInput(raw){
     if(typeof raw !== 'string') return '';
     return raw.replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\r/g,'').replace(/\n/g,'').trim();
@@ -46,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return { result: header + cipher };
   }
 
-  // 寬鬆容錯版 decodeText：只使用第一個冒號；若排列比 cipher 長，會截短排列到 cipher 長並回傳 warning
+  // 寬鬆容錯版 decodeText：只使用第一個冒號；若排列比 cipher 長，會截短並回傳 warning
   function decodeText(input){
     input = normalizeInput(String(input || ''));
     if(!startsWithSaveCode2Strict(input)) return { error: '系統：錯誤（前九字非 SaveCode2）' };
@@ -60,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!permPart) return { error: '系統：錯誤（排列為空）' };
 
     const rawTokens = permPart.split('-').filter(t => t.length>0);
-    // 把 token 轉為數字（若非數字會變成 NaN）
     const perm = rawTokens.map(t => {
       const v = parseInt(t, 10);
       return Number.isFinite(v) ? v : NaN;
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(perm.some(isNaN)) return { error: '系統：錯誤（排列含非數字）' };
 
     const cipherLen = Array.from(cipher).length;
+
     // 如果排列比 cipher 長，截短排列到 cipher 長（寬鬆容錯）
     if(perm.length > cipherLen){
       const wanted = cipherLen;
@@ -81,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(seen[v]) return { error: '系統：錯誤（截短後排列含重複）' };
         seen[v] = true;
       }
-      // 還原：cipher 的第 i 字元放到 plaintext 的 shortPerm[i]-1 位置
       const out = new Array(n).fill('');
       for(let i=0;i<n;i++){
         out[shortPerm[i]-1] = cipher.charAt(i) || '';
@@ -122,11 +123,39 @@ document.addEventListener('DOMContentLoaded', () => {
       let text = obj.result;
       if(obj.warning){
         text += '\n\n警告：' + obj.warning;
-        el.output.style.color = '#b35f00'; // 橙色
+        el.output.style.color = '#b35f00';
       } else {
         el.output.style.color = '#111';
       }
       el.output.textContent = text;
+    }
+  }
+
+  // 複製到剪貼簿（若有 warning 只複製純結果，不包含警告）
+  async function copyOutputToClipboard(){
+    if(!el.output) return;
+    const text = el.output.textContent || '';
+    // 若包含警告行，取第一段（結果本體）再複製
+    const parts = text.split(/\n\n警告：/);
+    const toCopy = parts[0];
+    try{
+      await navigator.clipboard.writeText(toCopy);
+      if(el.copyFeedback){
+        el.copyFeedback.classList.remove('hidden');
+        el.copyFeedback.textContent = '已複製';
+        setTimeout(()=>{ el.copyFeedback.classList.add('hidden'); }, 1600);
+      }
+    }catch(e){
+      // fallback: try execCommand (older browsers)
+      const ta = document.createElement('textarea');
+      ta.value = toCopy;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); if(el.copyFeedback){ el.copyFeedback.classList.remove('hidden'); el.copyFeedback.textContent='已複製'; setTimeout(()=>{ el.copyFeedback.classList.add('hidden'); },1600); } }
+      catch(err){ console.error('copy failed', err); }
+      document.body.removeChild(ta);
     }
   }
 
@@ -147,6 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(el.input) el.input.value = '';
     if(el.output) { el.output.textContent = '已清除'; el.output.style.color = '#111'; }
   });
+
+  if(el.copyBtn) el.copyBtn.addEventListener('click', copyOutputToClipboard);
 
   log('initialized');
 });
