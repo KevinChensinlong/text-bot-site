@@ -21,6 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return a;
   }
 
+  // 輸入安全化：去除常見零寬字元並 trim
+  function normalizeInput(raw){
+    if(typeof raw !== 'string') return '';
+    return raw.replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+  }
+
+  // 嚴格檢查：前九個字是否為 "SaveCode2"
+  function startsWithSaveCode2Strict(s){
+    const n = normalizeInput(s);
+    if(n.length < 9) return false;
+    return n.slice(0,9) === PREFIX;
+  }
+
   // 加密：回傳 { result } 或 { error }
   function encryptText(plaintext){
     plaintext = String(plaintext || '');
@@ -33,16 +46,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return { result: header + cipher };
   }
 
-  // 解碼：回傳 { result } 或 { error }
+  // 解碼（採用前九字嚴格檢查）：回傳 { result } 或 { error }
   function decodeText(input){
-    input = String(input || '');
-    if(!input.startsWith(PREFIX)) return { error: '系統：錯誤（缺少 SaveCode2）' };
-    const rest = input.slice(PREFIX.length);
+    input = normalizeInput(String(input || ''));
+    if(!startsWithSaveCode2Strict(input)) return { error: '系統：錯誤（前九字非 SaveCode2）' };
+
+    // 去掉前九字 "SaveCode2"
+    const rest = input.slice(9);
     const colonIndex = rest.indexOf(':');
     if(colonIndex === -1) return { error: '系統：錯誤（缺少 ":"）' };
     const permPart = rest.slice(0, colonIndex).trim();
     const cipher = rest.slice(colonIndex + 1);
     if(!permPart) return { error: '系統：錯誤（排列為空）' };
+
     const tokens = permPart.split('-').filter(t => t.length>0);
     const perm = tokens.map(t => {
       const v = parseInt(t, 10);
@@ -65,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const out = new Array(n).fill('');
     for(let i=0;i<n;i++){
       const target = perm[i] - 1;
-      out[target] = cipher.charAt(i);
+      out[target] = cipher.charAt(i) || '';
     }
     return { result: out.join('') };
   }
