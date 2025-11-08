@@ -1,18 +1,11 @@
 :root{--bg:#f7f8fa;--card:#fff;--accent:#1565c0}
 *{box-sizing:border-box}
-body{font-family: "Noto Sans TC", system-ui, Arial; margin:0; background:var(--bg); color:#111}
-.wrap{max-width:900px;margin:28px auto;padding:18px;background:var(--card);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+body{font-family:"Noto Sans TC", system-ui, Arial;margin:0;background:var(--bg);color:#111}
+.wrap{max-width:800px;margin:28px auto;padding:18px;background:var(--card);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
 h1{margin:0 0 12px 0}
 label{display:block;margin:6px 0;font-weight:600}
-textarea, input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical}
-.buttons{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical}
+.buttons{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
 button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600}
-button.small{padding:6px 8px}
-.box{min-height:64px;padding:10px;border-radius:6px;border:1px solid #eee;background:#fcfcfc;white-space:pre-wrap}
-.list{margin:8px 0;padding:0;list-style:none;border:1px solid #eee;border-radius:6px;max-height:220px;overflow:auto}
-.list li{padding:8px;border-bottom:1px solid #f4f4f4}
-.hidden{display:none}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.controls.small button{background:#333}
-.notes{margin-top:12px;color:#666;font-size:13px}
+.box{min-height:56px;padding:10px;border-radius:6px;border:1px solid #eee;background:#fcfcfc;white-space:pre-wrap;word-break:break-word}
 @media(max-width:560px){.buttons button{flex:1}}
