@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return a;
   }
 
-  // 輸入安全化：去除常見零寬字元並 trim
+  // 輸入安全化：去除常見零寬字元但保留內部符號（不移除冒號）
   function normalizeInput(raw){
     if(typeof raw !== 'string') return '';
     return raw.replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
@@ -46,17 +46,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return { result: header + cipher };
   }
 
-  // 解碼（採用前九字嚴格檢查）：回傳 { result } 或 { error }
+  // 解碼（採用前九字嚴格檢查，且只使用第一個冒號作為分隔）
   function decodeText(input){
     input = normalizeInput(String(input || ''));
     if(!startsWithSaveCode2Strict(input)) return { error: '系統：錯誤（前九字非 SaveCode2）' };
 
     // 去掉前九字 "SaveCode2"
     const rest = input.slice(9);
+    // 使用 indexOf 找第一個冒號，確保即使密文內含其他冒號也不影響
     const colonIndex = rest.indexOf(':');
     if(colonIndex === -1) return { error: '系統：錯誤（缺少 ":"）' };
+
+    // 只以第一個冒號為分隔，之後的冒號視為密文內容的一部分
     const permPart = rest.slice(0, colonIndex).trim();
-    const cipher = rest.slice(colonIndex + 1);
+    const cipher = rest.slice(colonIndex + 1); // 保留冒號之後的所有內容（可能包含其他冒號）
     if(!permPart) return { error: '系統：錯誤（排列為空）' };
 
     const tokens = permPart.split('-').filter(t => t.length>0);
@@ -65,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return Number.isFinite(v) ? v : NaN;
     });
     if(perm.some(isNaN)) return { error: '系統：錯誤（排列含非數字）' };
+
     if(perm.length !== cipher.length) return { error: '系統：錯誤（排列長度與密文長度不符）' };
 
     // 驗證是正確的 1..n 排列
