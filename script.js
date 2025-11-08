@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return a;
   }
 
-  // 輸入安全化：去除常見零寬字元但保留內部符號（不移除冒號）
+  // 輸入安全化：去除常見零寬字元並 trim（保留內部符號與冒號）
   function normalizeInput(raw){
     if(typeof raw !== 'string') return '';
-    return raw.replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+    return raw.replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\r/g,'').replace(/\n/g,'').trim();
   }
 
   // 嚴格檢查：前九個字是否為 "SaveCode2"
@@ -46,32 +46,55 @@ document.addEventListener('DOMContentLoaded', () => {
     return { result: header + cipher };
   }
 
-  // 解碼（採用前九字嚴格檢查，且只使用第一個冒號作為分隔）
+  // 寬鬆容錯版 decodeText：只使用第一個冒號；若排列比 cipher 長，會截短排列到 cipher 長並回傳 warning
   function decodeText(input){
     input = normalizeInput(String(input || ''));
     if(!startsWithSaveCode2Strict(input)) return { error: '系統：錯誤（前九字非 SaveCode2）' };
 
-    // 去掉前九字 "SaveCode2"
     const rest = input.slice(9);
-    // 使用 indexOf 找第一個冒號，確保即使密文內含其他冒號也不影響
     const colonIndex = rest.indexOf(':');
     if(colonIndex === -1) return { error: '系統：錯誤（缺少 ":"）' };
 
-    // 只以第一個冒號為分隔，之後的冒號視為密文內容的一部分
     const permPart = rest.slice(0, colonIndex).trim();
-    const cipher = rest.slice(colonIndex + 1); // 保留冒號之後的所有內容（可能包含其他冒號）
+    const cipher = rest.slice(colonIndex + 1);
     if(!permPart) return { error: '系統：錯誤（排列為空）' };
 
-    const tokens = permPart.split('-').filter(t => t.length>0);
-    const perm = tokens.map(t => {
+    const rawTokens = permPart.split('-').filter(t => t.length>0);
+    // 把 token 轉為數字（若非數字會變成 NaN）
+    const perm = rawTokens.map(t => {
       const v = parseInt(t, 10);
       return Number.isFinite(v) ? v : NaN;
     });
     if(perm.some(isNaN)) return { error: '系統：錯誤（排列含非數字）' };
 
-    if(perm.length !== cipher.length) return { error: '系統：錯誤（排列長度與密文長度不符）' };
+    const cipherLen = Array.from(cipher).length;
+    // 如果排列比 cipher 長，截短排列到 cipher 長（寬鬆容錯）
+    if(perm.length > cipherLen){
+      const wanted = cipherLen;
+      const shortPerm = perm.slice(0, wanted);
+      // 驗證 shortPerm 是否為 1..wanted 且無重複
+      const n = shortPerm.length;
+      const seen = new Array(n+1).fill(false);
+      for(let i=0;i<n;i++){
+        const v = shortPerm[i];
+        if(v < 1 || v > n) return { error: '系統：錯誤（截短後排列值超出範圍）' };
+        if(seen[v]) return { error: '系統：錯誤（截短後排列含重複）' };
+        seen[v] = true;
+      }
+      // 還原：cipher 的第 i 字元放到 plaintext 的 shortPerm[i]-1 位置
+      const out = new Array(n).fill('');
+      for(let i=0;i<n;i++){
+        out[shortPerm[i]-1] = cipher.charAt(i) || '';
+      }
+      return { result: out.join(''), warning: '排列比密文長，已截短排列到密文長度進行還原（可能遺失尾端資料）' };
+    }
 
-    // 驗證是正確的 1..n 排列
+    // 若排列短於 cipher，無法還原
+    if(perm.length < cipherLen){
+      return { error: '系統：錯誤（排列長度小於密文長度，無法還原）' };
+    }
+
+    // 兩者相等，正常驗證 1..n 與無重複
     const n = perm.length;
     const seen = new Array(n+1).fill(false);
     for(let i=0;i<n;i++){
@@ -81,23 +104,29 @@ document.addEventListener('DOMContentLoaded', () => {
       seen[v] = true;
     }
 
-    // 還原：cipher 的第 i 字元放到 plaintext 的 perm[i]-1 位置
+    // 還原全文
     const out = new Array(n).fill('');
     for(let i=0;i<n;i++){
-      const target = perm[i] - 1;
-      out[target] = cipher.charAt(i) || '';
+      out[perm[i]-1] = cipher.charAt(i) || '';
     }
     return { result: out.join('') };
   }
 
+  // 顯示結果（若有 warning 會附加並以橙色顯示）
   function show(obj){
     if(!el.output) return;
     if(obj.error){
       el.output.textContent = obj.error;
       el.output.style.color = 'crimson';
     } else {
-      el.output.textContent = obj.result;
-      el.output.style.color = '#111';
+      let text = obj.result;
+      if(obj.warning){
+        text += '\n\n警告：' + obj.warning;
+        el.output.style.color = '#b35f00'; // 橙色
+      } else {
+        el.output.style.color = '#111';
+      }
+      el.output.textContent = text;
     }
   }
 
