@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>排序式加密文字(網頁版)</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1565c0" />
 </head>
 <body>
   <main class="wrap">
@@ -32,7 +36,9 @@
       <h2>說明</h2>
       <div class="box">
         【注意】使用舊的Scratch加密之文字，可能無法正常在此解碼，請連結舊網站：<br>
-        <a href="https://scratch.mit.edu/projects/1034223738" target="_blank" rel="noopener">https://scratch.mit.edu/projects/1034223738</a><br><br>
+        <a href="https://scratch.mit.edu/projects/1034223738" target="_blank" rel="noopener">
+          https://scratch.mit.edu/projects/1034223738
+        </a><br><br>
         加密格式：SaveCode2 p1-p2-...-pn:cipherText<br><br>
         範例：明文「1234」 → 排列「3-1-2-4」 → 輸出「SaveCode23-1-2-4:3124」<br><br>
         解碼規則：解析排列 p，將 cipher 的第 i 字放回明文第 p[i]-1 位置。
@@ -40,6 +46,16 @@
     </section>
   </main>
 
+  <!-- 主程式 -->
   <script src="script.js"></script>
+
+  <!-- Service Worker 註冊 -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registered"))
+        .catch(err => console.error("Service Worker registration failed:", err));
+    }
+  </script>
 </body>
 </html>
