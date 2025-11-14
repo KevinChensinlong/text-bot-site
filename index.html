@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>排序式加密文字(網頁版)</title>
   <link rel="stylesheet" href="style.css" />
-
-  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#1565c0" />
 </head>
@@ -33,6 +31,14 @@
     </section>
 
     <section>
+      <h2>安裝</h2>
+      <div class="install-controls">
+        <button id="installBtn">添加至主畫面</button>
+        <span id="installFeedback" class="muted hidden">已觸發安裝提示</span>
+      </div>
+    </section>
+
+    <section>
       <h2>說明</h2>
       <div class="box">
         【注意】使用舊的Scratch加密之文字，可能無法正常在此解碼，請連結舊網站：<br>
@@ -46,15 +52,38 @@
     </section>
   </main>
 
-  <!-- 主程式 -->
   <script src="script.js"></script>
-
-  <!-- Service Worker 註冊 -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js")
         .then(() => console.log("Service Worker registered"))
         .catch(err => console.error("Service Worker registration failed:", err));
+    }
+
+    let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById("installBtn");
+      if (installBtn) installBtn.style.display = "inline-block";
+    });
+
+    const installBtn = document.getElementById("installBtn");
+    if (installBtn) {
+      installBtn.addEventListener("click", async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const choiceResult = await deferredPrompt.userChoice;
+          if (choiceResult.outcome === "accepted") {
+            console.log("使用者接受安裝");
+            document.getElementById("installFeedback")?.classList.remove("hidden");
+          } else {
+            console.log("使用者拒絕安裝");
+          }
+          deferredPrompt = null;
+          installBtn.style.display = "none";
+        }
+      });
     }
   </script>
 </body>
