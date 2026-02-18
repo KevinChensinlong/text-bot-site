@@ -2,6 +2,10 @@
   --bg: #f7f8fa;
   --card: #fff;
   --accent: #1565c0;
+  --text: #111;
+  --muted: #666;
+  --box-bg: #fcfcfc;
+  --border: #eee;
 }
 
 * {
@@ -12,7 +16,7 @@ body {
   font-family: "Noto Sans TC", system-ui, Arial, sans-serif;
   margin: 0;
   background: var(--bg);
-  color: #111;
+  color: var(--text);
 }
 
 .wrap {
@@ -38,10 +42,12 @@ label {
 input[type="text"] {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
   line-height: 1.4;
   font-size: 15px;
+  background: transparent;
+  color: var(--text);
 }
 
 .buttons {
@@ -65,8 +71,8 @@ button {
   min-height: 56px;
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid #eee;
-  background: #fcfcfc;
+  border: 1px solid var(--border);
+  background: var(--box-bg);
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 15px;
@@ -108,7 +114,7 @@ button {
 }
 
 .muted {
-  color: #666;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -131,18 +137,12 @@ a:hover {
   }
 }
 
-/* Dark mode variables override */
-:root {
-  --bg: #f7f8fa;
-  --card: #fff;
-  --accent: #1565c0;
-  --text: #111;
-  --muted: #666;
-  --box-bg: #fcfcfc;
-  --border: #eee;
+/* Smooth transitions for theme changes */
+body, .wrap, .box, input[type="text"], button, a {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
 }
 
-/* Dark theme variables (used when body.dark-mode or prefers-color-scheme: dark) */
+/* Dark theme: applied when body.dark-mode is present or when system prefers dark */
 body.dark-mode,
 @media (prefers-color-scheme: dark) {
   --bg: #0f1113;
@@ -154,42 +154,39 @@ body.dark-mode,
   --border: #222428;
 }
 
-/* Apply variables to existing selectors (only add if you want smoother transitions) */
-body, .wrap, .box, input[type="text"], button, a {
-  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
-}
-
-/* Ensure components use the new variables */
-body {
+/* Adjustments that rely on variables (no need to duplicate colors) */
+body.dark-mode {
   background: var(--bg);
   color: var(--text);
 }
 
-.wrap {
+body.dark-mode .wrap {
   background: var(--card);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
-.box {
+body.dark-mode .box {
   background: var(--box-bg);
   border: 1px solid var(--border);
-}
-
-input[type="text"] {
-  border: 1px solid var(--border);
-  background: transparent;
   color: var(--text);
 }
 
-button, #copyBtn, #installBtn {
-  background: var(--accent);
-  color: #fff;
+body.dark-mode input[type="text"] {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: transparent;
 }
 
-.muted {
+body.dark-mode .muted {
   color: var(--muted);
 }
 
-a {
+body.dark-mode a {
   color: var(--accent);
+}
+
+/* Optional: focus styles for accessibility */
+input[type="text"]:focus, button:focus {
+  outline: 3px solid rgba(21, 101, 192, 0.12);
+  outline-offset: 2px;
 }
