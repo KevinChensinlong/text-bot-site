@@ -181,3 +181,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   log('initialized');
 });
+
+// 在頁面載入時套用偏好
+(function applyThemeFromPreference() {
+  const saved = localStorage.getItem('theme'); // 'dark' or 'light' or null
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === 'dark' || (saved === null && prefersDark)) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+})();
+
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  // 可選：更新按鈕文字或 icon
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = isDark ? '淺色模式' : '暗色模式';
+}
