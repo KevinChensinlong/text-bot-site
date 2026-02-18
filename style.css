@@ -130,3 +130,66 @@ a:hover {
     flex: 1;
   }
 }
+
+/* Dark mode variables override */
+:root {
+  --bg: #f7f8fa;
+  --card: #fff;
+  --accent: #1565c0;
+  --text: #111;
+  --muted: #666;
+  --box-bg: #fcfcfc;
+  --border: #eee;
+}
+
+/* Dark theme variables (used when body.dark-mode or prefers-color-scheme: dark) */
+body.dark-mode,
+@media (prefers-color-scheme: dark) {
+  --bg: #0f1113;
+  --card: #121316;
+  --accent: #4ea3ff;
+  --text: #e6eef8;
+  --muted: #9aa6b2;
+  --box-bg: #0b0c0d;
+  --border: #222428;
+}
+
+/* Apply variables to existing selectors (only add if you want smoother transitions) */
+body, .wrap, .box, input[type="text"], button, a {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+/* Ensure components use the new variables */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.wrap {
+  background: var(--card);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.box {
+  background: var(--box-bg);
+  border: 1px solid var(--border);
+}
+
+input[type="text"] {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+button, #copyBtn, #installBtn {
+  background: var(--accent);
+  color: #fff;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+a {
+  color: var(--accent);
+}
