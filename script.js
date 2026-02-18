@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     decodeBtn: document.getElementById('decodeBtn'),
     clearBtn: document.getElementById('clearBtn'),
     copyBtn: document.getElementById('copyBtn'),
-    copyFeedback: document.getElementById('copyFeedback')
+    copyFeedback: document.getElementById('copyFeedback'),
+    themeBtn: document.getElementById('themeToggleBtn')
   };
 
   function log(msg){ console.log('[SaveCode2]', msg); }
@@ -159,7 +160,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 綁定
+  // 主題：套用儲存或系統偏好
+  (function applyThemeFromPreference() {
+    const saved = localStorage.getItem('theme'); // 'dark' or 'light' or null
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (saved === null && prefersDark)) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  })();
+
+  // 切換函式（保持在此作用域可被按鈕綁定）
+  function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    if (el.themeBtn) {
+      el.themeBtn.textContent = isDark ? '淺色模式' : '暗色模式';
+      el.themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+    }
+  }
+
+  // 綁定按鈕與事件
   if(el.encryptBtn) el.encryptBtn.addEventListener('click', () => {
     const res = encryptText(el.input ? el.input.value : '');
     show(res);
@@ -179,24 +201,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if(el.copyBtn) el.copyBtn.addEventListener('click', copyOutputToClipboard);
 
+  // 綁定主題按鈕（若存在）
+  if(el.themeBtn) {
+    el.themeBtn.textContent = document.body.classList.contains('dark-mode') ? '淺色模式' : '暗色模式';
+    el.themeBtn.setAttribute('aria-pressed', document.body.classList.contains('dark-mode') ? 'true' : 'false');
+    el.themeBtn.addEventListener('click', toggleDarkMode);
+  }
+
   log('initialized');
 });
-
-// 在頁面載入時套用偏好
-(function applyThemeFromPreference() {
-  const saved = localStorage.getItem('theme'); // 'dark' or 'light' or null
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (saved === 'dark' || (saved === null && prefersDark)) {
-    document.body.classList.add('dark-mode');
-  } else {
-    document.body.classList.remove('dark-mode');
-  }
-})();
-
-function toggleDarkMode() {
-  const isDark = document.body.classList.toggle('dark-mode');
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  // 可選：更新按鈕文字或 icon
-  const btn = document.getElementById('themeToggleBtn');
-  if (btn) btn.textContent = isDark ? '淺色模式' : '暗色模式';
-}
