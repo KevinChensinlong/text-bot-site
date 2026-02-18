@@ -8,9 +8,7 @@
   --border: #eee;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   font-family: "Noto Sans TC", system-ui, Arial, sans-serif;
@@ -19,42 +17,24 @@ body {
   color: var(--text);
 }
 
+/* 主要容器 */
 .wrap {
   max-width: 900px;
   margin: 28px auto;
   padding: 18px;
   background: var(--card);
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-h1 {
-  margin: 0 0 12px 0;
-  font-size: 24px;
-}
-
-label {
-  display: block;
-  margin: 6px 0;
-  font-weight: 600;
-}
-
+/* 表單與按鈕 */
 input[type="text"] {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  line-height: 1.4;
-  font-size: 15px;
   background: transparent;
   color: var(--text);
-}
-
-.buttons {
-  display: flex;
-  gap: 8px;
-  margin: 12px 0;
-  flex-wrap: wrap;
 }
 
 button {
@@ -67,84 +47,36 @@ button {
   font-weight: 600;
 }
 
+/* 輸出區塊 */
 .box {
   min-height: 56px;
   padding: 10px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--box-bg);
+  color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 15px;
-  line-height: 1.4;
 }
 
-.output-controls {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* 小元件 */
+.muted { color: var(--muted); font-size: 13px; }
+.hidden { display: none; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-#copyBtn {
-  background: var(--accent);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 0;
-  cursor: pointer;
-}
-
-.install-controls {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#installBtn {
-  background: var(--accent);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 0;
-  cursor: pointer;
-  font-weight: 600;
-  display: none;
-}
-
-.muted {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.hidden {
-  display: none;
-}
-
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
+/* 響應式 */
 @media (max-width: 560px) {
-  .buttons button {
-    flex: 1;
-  }
+  .buttons button { flex: 1; }
 }
 
-/* Smooth transitions for theme changes */
+/* 平滑過渡 */
 body, .wrap, .box, input[type="text"], button, a {
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
 }
 
-/* Dark theme: applied when body.dark-mode is present or when system prefers dark */
-body.dark-mode,
-@media (prefers-color-scheme: dark) {
+/* Dark mode via class on body */
+body.dark-mode {
   --bg: #0f1113;
   --card: #121316;
   --accent: #4ea3ff;
@@ -154,39 +86,26 @@ body.dark-mode,
   --border: #222428;
 }
 
-/* Adjustments that rely on variables (no need to duplicate colors) */
-body.dark-mode {
-  background: var(--bg);
-  color: var(--text);
+/* System preference fallback: apply variables when system prefers dark */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1113;
+    --card: #121316;
+    --accent: #4ea3ff;
+    --text: #e6eef8;
+    --muted: #9aa6b2;
+    --box-bg: #0b0c0d;
+    --border: #222428;
+  }
 }
 
+/* 可選：暗色時微調陰影 */
 body.dark-mode .wrap {
-  background: var(--card);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
 
-body.dark-mode .box {
-  background: var(--box-bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-body.dark-mode input[type="text"] {
-  border: 1px solid var(--border);
-  color: var(--text);
-  background: transparent;
-}
-
-body.dark-mode .muted {
-  color: var(--muted);
-}
-
-body.dark-mode a {
-  color: var(--accent);
-}
-
-/* Optional: focus styles for accessibility */
+/* 可及時顯示 focus */
 input[type="text"]:focus, button:focus {
-  outline: 3px solid rgba(21, 101, 192, 0.12);
+  outline: 3px solid rgba(21,101,192,0.12);
   outline-offset: 2px;
 }
